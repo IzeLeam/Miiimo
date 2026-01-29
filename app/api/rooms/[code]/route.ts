@@ -21,6 +21,7 @@ export async function GET(
       id: room.id,
       code: room.code,
       expiresAt: room.expiresAt,
+      serverNow: new Date(),
     });
   } catch (error) {
     console.error("Error fetching room:", error);

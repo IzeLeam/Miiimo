@@ -14,6 +14,7 @@ interface RoomData {
   id: string;
   code: string;
   expiresAt: string;
+  serverNow?: string;
 }
 
 interface RoomClientProps {
@@ -134,6 +135,11 @@ export function RoomClient({ code }: RoomClientProps) {
           </h1>
           <ExpiryTimer
             expiresAt={new Date(room.expiresAt)}
+            serverOffsetMs={
+              room.serverNow
+                ? new Date(room.serverNow).getTime() - Date.now()
+                : 0
+            }
             onExpire={handleExpire}
           />
         </div>

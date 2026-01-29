@@ -5,18 +5,19 @@ import { formatTimeRemaining } from "@/lib/utils";
 
 interface ExpiryTimerProps {
   expiresAt: Date;
+  serverOffsetMs?: number;
   onExpire?: () => void;
 }
 
-export function ExpiryTimer({ expiresAt, onExpire }: ExpiryTimerProps) {
-  const [timeRemaining, setTimeRemaining] = useState(
-    formatTimeRemaining(expiresAt)
-  );
+export function ExpiryTimer({ expiresAt, serverOffsetMs = 0, onExpire }: ExpiryTimerProps) {
+  const compute = () => formatTimeRemaining(expiresAt, serverOffsetMs);
+
+  const [timeRemaining, setTimeRemaining] = useState(compute());
   const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const remaining = formatTimeRemaining(expiresAt);
+      const remaining = compute();
       setTimeRemaining(remaining);
 
       if (remaining === "Expired") {

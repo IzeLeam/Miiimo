@@ -15,8 +15,9 @@ export function isRoomExpired(expiresAt: Date): boolean {
   return new Date() > expiresAt;
 }
 
-export function formatTimeRemaining(expiresAt: Date): string {
-  const diff = expiresAt.getTime() - Date.now();
+export function formatTimeRemaining(expiresAt: Date, serverOffsetMs = 0): string {
+  const now = Date.now() + serverOffsetMs;
+  const diff = expiresAt.getTime() - now;
   if (diff <= 0) return "Expired";
   
   const minutes = Math.floor(diff / 60000);
