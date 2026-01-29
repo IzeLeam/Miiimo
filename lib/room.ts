@@ -2,6 +2,9 @@ import { prisma } from "./prisma";
 import { generateRoomCode, getRoomExpiryDate, isRoomExpired } from "./utils";
 
 export async function createRoom() {
+  await cleanupExpiredRooms();
+  await cleanupConsumedItems();
+
   const code = generateRoomCode();
   const expiresAt = getRoomExpiryDate(10);
 
@@ -16,6 +19,9 @@ export async function createRoom() {
 }
 
 export async function getRoomByCode(code: string) {
+  await cleanupExpiredRooms();
+  await cleanupConsumedItems();
+
   const room = await prisma.room.findUnique({
     where: { code: code.toUpperCase() },
   });
@@ -27,6 +33,9 @@ export async function getRoomByCode(code: string) {
 }
 
 export async function sendTextToRoom(roomId: string, content: string) {
+  await cleanupExpiredRooms();
+  await cleanupConsumedItems();
+
   const room = await prisma.room.findUnique({
     where: { id: roomId },
   });
@@ -46,6 +55,9 @@ export async function sendTextToRoom(roomId: string, content: string) {
 }
 
 export async function getLatestUnconsumedItem(roomId: string) {
+  await cleanupExpiredRooms();
+  await cleanupConsumedItems();
+
   const item = await prisma.clipboardItem.findFirst({
     where: {
       roomId,
@@ -77,5 +89,16 @@ export async function cleanupExpiredRooms() {
     },
   });
 
+  return result.count;
+}
+
+export async function cleanupConsumedItems(hoursOld = 1) {
+  const cutoff = new Date(Date.now() - hoursOld * 60 * 60 * 1000);
+  const result = await prisma.clipboardItem.deleteMany({
+    where: {
+      consumed: true,
+      createdAt: { lt: cutoff },
+    },
+  });
   return result.count;
 }
