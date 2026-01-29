@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -13,21 +13,19 @@ interface ReceivedItem {
 
 interface ReceiveDisplayProps {
   roomCode: string;
-  pollingInterval?: number;
 }
 
-export function ReceiveDisplay({
-  roomCode,
-  pollingInterval = 2000,
-}: ReceiveDisplayProps) {
+export function ReceiveDisplay({ roomCode }: ReceiveDisplayProps) {
   const [item, setItem] = useState<ReceivedItem | null>(null);
   const [status, setStatus] = useState<"waiting" | "received" | "error">(
     "waiting"
   );
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const fetchLatestItem = useCallback(async () => {
+    setLoading(true);
     try {
       const response = await fetch(`/api/rooms/${roomCode}/receive`);
 
@@ -35,9 +33,9 @@ export function ReceiveDisplay({
         if (response.status === 410) {
           setError("Room expired");
           setStatus("error");
-          return false;
+          return;
         }
-        return true;
+        return;
       }
 
       const data = await response.json();
@@ -58,32 +56,13 @@ export function ReceiveDisplay({
         // Mark as consumed
         await fetch(`/api/rooms/${roomCode}/receive?consume=true`);
       }
-
-      return true;
     } catch {
-      return true;
+      setError("Failed to fetch latest text");
+      setStatus("error");
+    } finally {
+      setLoading(false);
     }
   }, [roomCode, item]);
-
-  useEffect(() => {
-    let active = true;
-
-    const poll = async () => {
-      if (!active) return;
-
-      const shouldContinue = await fetchLatestItem();
-
-      if (active && shouldContinue) {
-        setTimeout(poll, pollingInterval);
-      }
-    };
-
-    poll();
-
-    return () => {
-      active = false;
-    };
-  }, [fetchLatestItem, pollingInterval]);
 
   const handleCopy = async () => {
     if (!item) return;
@@ -107,21 +86,73 @@ export function ReceiveDisplay({
 
   if (!item) {
     return (
-      <div className="text-center">
+      <div className="space-y-4 text-center">
         <StatusBadge status="waiting" />
-        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
-          Scan the QR code from another device to send text
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          Scan the QR code from another device and tap receive to pull the
+          latest text.
         </p>
+        <div className="flex justify-center">
+          <Button onClick={fetchLatestItem} loading={loading} size="lg">
+            Receive latest
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-center">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <StatusBadge status="received">
           {copied ? "Copied to clipboard!" : "Text received"}
         </StatusBadge>
+        <div className="flex gap-2">
+          <Button onClick={fetchLatestItem} loading={loading} variant="secondary">
+            Refresh
+          </Button>
+          <Button
+            onClick={handleCopy}
+            variant={copied ? "secondary" : "primary"}
+            className="min-w-[140px]"
+          >
+            {copied ? (
+              <>
+                <svg
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Copied!
+              </>
+            ) : (
+              <>
+                <svg
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+                Copy
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -131,50 +162,6 @@ export function ReceiveDisplay({
           </pre>
         </CardContent>
       </Card>
-
-      <div className="flex justify-center">
-        <Button
-          onClick={handleCopy}
-          variant={copied ? "secondary" : "primary"}
-          className="min-w-[160px]"
-        >
-          {copied ? (
-            <>
-              <svg
-                className="w-4 h-4 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              Copied!
-            </>
-          ) : (
-            <>
-              <svg
-                className="w-4 h-4 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                />
-              </svg>
-              Copy to clipboard
-            </>
-          )}
-        </Button>
-      </div>
     </div>
   );
 }

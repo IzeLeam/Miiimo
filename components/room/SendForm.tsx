@@ -20,7 +20,6 @@ export function SendForm({ roomCode, onSent }: SendFormProps) {
     setError(null);
 
     try {
-      // Read from clipboard
       const content = await navigator.clipboard.readText();
 
       if (!content || !content.trim()) {

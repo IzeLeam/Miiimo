@@ -123,7 +123,7 @@ export function RoomClient({ code }: RoomClientProps) {
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 py-8 px-4">
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-semibold text-neutral-900 dark:text-white">
@@ -138,37 +138,40 @@ export function RoomClient({ code }: RoomClientProps) {
           />
         </div>
 
-        {/* QR Code Section - Desktop prominent, mobile smaller */}
-        <Card>
-          <CardContent className="py-8">
-            <div className="flex flex-col items-center">
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
-                Scan this QR code from another device
-              </p>
-              <QRCodeDisplay url={roomUrl} />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 md:gap-8 md:grid-cols-[320px_1fr] lg:grid-cols-[360px_1fr] items-start">
+          {/* QR Code Section */}
+          <Card className="md:sticky md:top-6">
+            <CardContent className="py-8">
+              <div className="flex flex-col items-center">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
+                  Scan this QR code from another device
+                </p>
+                <QRCodeDisplay url={roomUrl} />
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Send Section */}
-        <Card>
-          <CardContent>
-            <h2 className="text-lg font-medium text-neutral-900 dark:text-white mb-4">
-              Send Text
-            </h2>
-            <SendForm roomCode={room.code} />
-          </CardContent>
-        </Card>
+          {/* Right column: Send + Receive */}
+          <div className="space-y-6">
+            <Card>
+              <CardContent>
+                <h2 className="text-lg font-medium text-neutral-900 dark:text-white mb-4">
+                  Send Text
+                </h2>
+                <SendForm roomCode={room.code} />
+              </CardContent>
+            </Card>
 
-        {/* Receive Section */}
-        <Card>
-          <CardContent>
-            <h2 className="text-lg font-medium text-neutral-900 dark:text-white mb-4">
-              Received Text
-            </h2>
-            <ReceiveDisplay roomCode={room.code} />
-          </CardContent>
-        </Card>
+            <Card>
+              <CardContent>
+                <h2 className="text-lg font-medium text-neutral-900 dark:text-white mb-4">
+                  Received Text
+                </h2>
+                <ReceiveDisplay roomCode={room.code} />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
         {/* Footer */}
         <div className="text-center">
