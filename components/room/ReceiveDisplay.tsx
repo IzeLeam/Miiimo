@@ -24,6 +24,12 @@ export function ReceiveDisplay({ roomCode }: ReceiveDisplayProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const clipboardAvailable =
+    typeof navigator !== "undefined" &&
+    typeof window !== "undefined" &&
+    !!navigator.clipboard &&
+    window.isSecureContext;
+
   const fetchLatestItem = useCallback(async () => {
     setLoading(true);
     try {
@@ -45,12 +51,14 @@ export function ReceiveDisplay({ roomCode }: ReceiveDisplayProps) {
         setStatus("received");
 
         // Auto-copy on receive
-        try {
-          await navigator.clipboard.writeText(data.item.content);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        } catch {
-          // Clipboard access denied, user will copy manually
+        if (clipboardAvailable) {
+          try {
+            await navigator.clipboard.writeText(data.item.content);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          } catch {
+            // Clipboard access denied, user will copy manually
+          }
         }
 
         // Mark as consumed
@@ -68,6 +76,11 @@ export function ReceiveDisplay({ roomCode }: ReceiveDisplayProps) {
     if (!item) return;
 
     try {
+      if (!clipboardAvailable) {
+        throw new Error(
+          "Clipboard access unavailable. Use HTTPS/localhost and allow clipboard permissions."
+        );
+      }
       await navigator.clipboard.writeText(item.content);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);

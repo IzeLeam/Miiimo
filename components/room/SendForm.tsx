@@ -20,6 +20,18 @@ export function SendForm({ roomCode, onSent }: SendFormProps) {
     setError(null);
 
     try {
+      const clipboardAvailable =
+        typeof navigator !== "undefined" &&
+        typeof window !== "undefined" &&
+        !!navigator.clipboard &&
+        window.isSecureContext;
+
+      if (!clipboardAvailable) {
+        throw new Error(
+          "Clipboard access unavailable. Use HTTPS/localhost and allow clipboard permissions."
+        );
+      }
+
       const content = await navigator.clipboard.readText();
 
       if (!content || !content.trim()) {
